@@ -4,7 +4,7 @@
 $UxPlayArgs = @(
     '-n', 'Command Center'      # receiver name shown on the iPad
     '-nh'                       # do not append "@hostname" to the name
-    '-pin', '4826'              # CHANGE THIS. Fixed 4-digit PIN. A random PIN (-pin alone) is only
+    '-pin', '4826'              # CHANGE THIS. Fixed 4-digit PIN, 0001-9999 (0000 is rejected). A random PIN (-pin alone) is only
                                 # printed to the console, which is hidden when run as a logon task.
                                 # Alternative: '-pw', '<password of 6+ chars>' instead of -pin.
     '-fs'                       # full screen (works with D3D11/12 sinks)
