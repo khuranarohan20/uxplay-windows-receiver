@@ -4,7 +4,7 @@ Build under test: see `THIRD_PARTY_NOTICES.md` (UxPlay commit) and `bin\uxplay.e
 PC: __________  iPad model / iPadOS: __________  Date: __________  Tester: __________
 
 Precondition: `start-receiver.ps1` running, firewall rules from `FIREWALL.md` applied,
-iPad and PC on the same network, PC adapter on the Private profile.
+iPad and PC on the same network, PC adapter on the Domain profile.
 
 ## T1 Discovery
 1. On the iPad open Control Center → Screen Mirroring.
