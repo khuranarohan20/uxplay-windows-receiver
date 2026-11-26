@@ -16,12 +16,12 @@ Appeared: [ ] yes [ ] no   Time to appear: ____ s
 Result: ______  Notes: ______
 
 ## T2 Access control
-1. Select "Command Center". Enter a WRONG PIN.
+1. Select "Command Center". Enter a WRONG password.
 2. Record whether the connection is refused.
-3. Select it again, enter the correct PIN from `receiver.config.ps1`.
+3. Select it again, enter the correct password (`-pw`) from `receiver.config.ps1`.
 4. Record whether mirroring starts.
 
-Wrong PIN rejected: [ ] yes [ ] no   Correct PIN accepted: [ ] yes [ ] no
+Wrong PIN rejected: [ ] yes [ ] no   Correct password accepted: [ ] yes [ ] no
 Result: ______  Notes: ______
 
 ## T3 Full screen

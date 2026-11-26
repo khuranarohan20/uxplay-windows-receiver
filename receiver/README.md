@@ -4,7 +4,7 @@
 Version/commit: `THIRD_PARTY_NOTICES.md`. All options: `docs\uxplay-help.txt`.
 
 ## Configure
-Edit `receiver.config.ps1`. **Change the PIN** (`-pin 4826`) before use.
+Edit `receiver.config.ps1`. **Change the password** (`-pw ChangeMe26`) before use. Do not use `-pin`: it crashes UxPlay 1.74 after pairing ([FDH2/UxPlay#646](https://github.com/FDH2/UxPlay/issues/646)).
 Sink fallback: replace `d3d12videosink` with `d3d11videosink` if video doesn't show.
 
 ## Firewall
