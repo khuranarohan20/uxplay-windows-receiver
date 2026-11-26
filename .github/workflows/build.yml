@@ -1,0 +1,94 @@
+name: Build Windows receiver
+
+# Builds the official UxPlay source (https://github.com/FDH2/UxPlay) with MSYS2 UCRT64,
+# following the README's "Building UxPlay on Microsoft Windows" steps, then packages a
+# standalone receiver/ folder. Tag push (v*) publishes a GitHub Release.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  UXPLAY_REPO: FDH2/UxPlay
+  UXPLAY_COMMIT: 566f3460e3cbb16c2c33a7ac607d3d2d0dd09b14
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.UXPLAY_REPO }}
+          ref: ${{ env.UXPLAY_COMMIT }}
+          path: src
+
+      # README steps 3-4 plus the runtime plugins it lists (libav, plugins-good, plugins-bad).
+      # ntldd is only used to find DLL dependencies for packaging.
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-libplist
+            mingw-w64-ucrt-x86_64-gstreamer
+            mingw-w64-ucrt-x86_64-gst-plugins-base
+            mingw-w64-ucrt-x86_64-gst-libav
+            mingw-w64-ucrt-x86_64-gst-plugins-good
+            mingw-w64-ucrt-x86_64-gst-plugins-bad
+            mingw-w64-ucrt-x86_64-ntldd
+
+      # README step 5: mkdir build; cd build; cmake ..; ninja
+      - name: Build UxPlay
+        run: |
+          set -o pipefail
+          mkdir -p logs src/build
+          cd src/build
+          { echo "UxPlay ${UXPLAY_REPO}@${UXPLAY_COMMIT}"; pacman -Q; cmake ..; ninja; } 2>&1 | tee ../../logs/build.log
+
+      - name: Package
+        run: bash scripts/package.sh
+
+      # Run from plain PowerShell with no MSYS2 directories on PATH.
+      - name: Verify standalone package
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $r = "dist\receiver"
+          $env:GST_PLUGIN_SYSTEM_PATH_1_0 = "$r\lib\gstreamer-1.0"
+          $env:GST_PLUGIN_SCANNER_1_0 = "$r\libexec\gstreamer-1.0\gst-plugin-scanner.exe"
+          $env:GST_REGISTRY_1_0 = "$env:RUNNER_TEMP\gst-registry.bin"
+          & "$r\bin\uxplay.exe" -h *> "$r\docs\uxplay-help.txt"
+          Get-Content "$r\docs\uxplay-help.txt" -TotalCount 5
+          if ((Get-Item "$r\docs\uxplay-help.txt").Length -lt 1000) { throw "uxplay -h produced no help text" }
+          foreach ($e in 'd3d12videosink','d3d11videosink','avdec_h264','d3d11h264dec','wasapisink') {
+            & "$r\bin\gst-inspect-1.0.exe" --exists $e
+            "$e loaded: $($LASTEXITCODE -eq 0)" | Tee-Object -Append "$r\docs\plugin-check.txt"
+          }
+          $global:LASTEXITCODE = 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: receiver
+          path: dist/receiver
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Compress-Archive dist\receiver receiver.zip
+          gh release create $env:GITHUB_REF_NAME receiver.zip dist\receiver\docs\uxplay-help.txt `
+            --title $env:GITHUB_REF_NAME `
+            --notes "UxPlay built from $env:UXPLAY_REPO@$env:UXPLAY_COMMIT (GPLv3; source: https://github.com/$env:UXPLAY_REPO/tree/$env:UXPLAY_COMMIT). See THIRD_PARTY_NOTICES.md inside the zip."
