@@ -9,6 +9,7 @@ Sink fallback: replace `d3d12videosink` with `d3d11videosink` if video doesn't s
 
 ## Firewall
 See `docs\FIREWALL.md` (run as Administrator, after review).
+For what the network/IT team must allow (firewall, mDNS, endpoint security, iPad MDM), see `docs\IT-REQUIREMENTS.md`.
 
 ## Start / stop
 ```powershell
